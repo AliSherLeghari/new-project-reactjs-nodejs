@@ -1,8 +1,13 @@
 import { createApp } from './app.js';
-import { parsePort } from './config.js';
+import { parsePort, parseGithubTimeout } from './config.js';
+import { createGithubClient } from './github/client.js';
+import { createRepositoryService } from './repositories/service.js';
 
 const port = parsePort(process.env.PORT);
-const server = createApp().listen(port, () => {
+const client = createGithubClient({
+  timeoutMs: parseGithubTimeout(process.env.GITHUB_TIMEOUT_MS),
+});
+const server = createApp(createRepositoryService(client)).listen(port, () => {
   console.log(`OpenSource Explorer API listening on port ${port}`);
 });
 server.on('error', (error) => {
