@@ -11,14 +11,16 @@ const healthy = () =>
     ),
   );
 describe('foundation UI', () => {
-  it('labels preview controls and renders the real connection result', async () => {
+  it('labels search controls and renders the real connection result', async () => {
     const fetchMock = vi.fn(healthy);
     vi.stubGlobal('fetch', fetchMock);
     render(<App />);
-    expect(screen.getByRole('status')).toHaveTextContent('Checking backend');
+    expect(screen.getAllByRole('status')[0]).toHaveTextContent(
+      'Checking backend',
+    );
     expect(screen.getByLabelText('Repository or topic')).toBeVisible();
     expect(screen.getByLabelText('Language')).toBeVisible();
-    expect(screen.getByRole('button', { name: /Search/ })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Search' })).toBeEnabled();
     expect(await screen.findByText('Backend connected')).toBeVisible();
     expect(fetchMock).toHaveBeenCalledWith('/api/health', {
       signal: expect.any(AbortSignal),
@@ -55,7 +57,9 @@ describe('foundation UI', () => {
     await act(async () => {
       await vi.advanceTimersByTimeAsync(5000);
     });
-    expect(screen.getByRole('status')).toHaveTextContent('Backend unavailable');
+    expect(screen.getAllByRole('status')[0]).toHaveTextContent(
+      'Backend unavailable',
+    );
   });
   it('aborts the request when unmounted', () => {
     let signal: AbortSignal | undefined;

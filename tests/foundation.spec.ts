@@ -10,11 +10,17 @@ for (const viewport of [
   }) => {
     await page.setViewportSize(viewport);
     await page.goto('/');
-    await expect(page.getByRole('status')).toHaveText('Backend connected');
+    await expect(
+      page
+        .getByRole('region', { name: 'Backend connectivity' })
+        .getByRole('status'),
+    ).toHaveText('Backend connected');
     await expect(page).toHaveTitle('OpenSource Explorer');
-    await expect(page.getByRole('button', { name: /Search/ })).toBeDisabled();
+    await expect(
+      page.getByRole('button', { name: 'Search', exact: true }),
+    ).toBeEnabled();
     await page.getByLabel('Repository or topic').fill('react');
-    await page.getByLabel('Language').selectOption('TypeScript');
+    await page.getByLabel('Language').selectOption('typescript');
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= window.innerWidth,
@@ -38,8 +44,16 @@ test('keyboard navigation and recovery from a real HTTP failure', async ({
   await expect(
     page.getByRole('link', { name: 'Skip to content' }),
   ).toBeFocused();
-  await expect(page.getByRole('status')).toContainText('Backend unavailable');
+  await expect(
+    page
+      .getByRole('region', { name: 'Backend connectivity' })
+      .getByRole('status'),
+  ).toContainText('Backend unavailable');
   await page.unroute('**/api/health');
   await page.getByRole('button', { name: 'Retry connection' }).click();
-  await expect(page.getByRole('status')).toHaveText('Backend connected');
+  await expect(
+    page
+      .getByRole('region', { name: 'Backend connectivity' })
+      .getByRole('status'),
+  ).toHaveText('Backend connected');
 });
