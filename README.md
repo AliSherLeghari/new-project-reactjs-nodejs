@@ -1,5 +1,7 @@
 # OpenSource Explorer
 
+[Central phase progress and evidence](docs/PHASE_PROGRESS.md) is the permanent project journal. [Current status](docs/PROJECT_STATUS.md) is the short snapshot. Phase 5 engineering is being verified; deployment and stack merges require separate approval.
+
 A student full-stack learning project built with AI assistance and code review. The planned product helps people discover public GitHub repositories. **Phase 4 adds shareable repository details and a bounded list of public contribution issues, alongside working search, filtering, and pagination.**
 
 ## What works

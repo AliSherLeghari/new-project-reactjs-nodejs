@@ -12,5 +12,17 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/test-setup.ts',
     clearMocks: true,
+    coverage: {
+      provider: 'v8',
+      thresholds: { lines: 90, statements: 90, branches: 85, functions: 85 },
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: [
+        'src/**/*.test.tsx',
+        'src/**/testFixtures.ts',
+        'src/test-setup.ts',
+        'src/main.tsx',
+      ],
+      reporter: ['text', 'json-summary', 'lcov'],
+    },
   },
 });

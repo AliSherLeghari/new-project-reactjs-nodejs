@@ -1,19 +1,27 @@
-import { createApp } from './app.js';
+import { fileURLToPath } from 'node:url';
 import { parsePort, parseGithubTimeout } from './config.js';
-import { createGithubClient } from './github/client.js';
-import { createRepositoryService } from './repositories/service.js';
+import { startServer } from './runtime.js';
 
-const port = parsePort(process.env.PORT);
-const client = createGithubClient({
-  timeoutMs: parseGithubTimeout(process.env.GITHUB_TIMEOUT_MS),
-});
-const server = createApp(createRepositoryService(client)).listen(port, () => {
-  console.log(`OpenSource Explorer API listening on port ${port}`);
-});
-server.on('error', (error) => {
-  console.error('Server could not start:', error.message);
+try {
+  const production = process.env.NODE_ENV === 'production';
+  const runtime = startServer({
+    port: parsePort(process.env.PORT),
+    production,
+    frontendDir: production
+      ? fileURLToPath(new URL('../../frontend/dist/', import.meta.url))
+      : undefined,
+    githubTimeoutMs: parseGithubTimeout(process.env.GITHUB_TIMEOUT_MS),
+  });
+  for (const signal of ['SIGINT', 'SIGTERM'] as const)
+    process.once(signal, () => {
+      void runtime.shutdown(signal);
+    });
+} catch {
+  console.error(
+    JSON.stringify({
+      event: 'startup_failed',
+      message: 'Check build outputs and environment configuration.',
+    }),
+  );
   process.exitCode = 1;
-});
-for (const signal of ['SIGINT', 'SIGTERM'] as const) {
-  process.on(signal, () => server.close());
 }

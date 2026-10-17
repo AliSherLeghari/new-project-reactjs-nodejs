@@ -19,12 +19,18 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test:e2e": "playwright test",
-    "check": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run build"
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run build",
+    "test:coverage": "npm run test:coverage --workspaces",
+    "test:production": "playwright test --config playwright.production.config.ts",
+    "start": "node scripts/start-production.mjs",
+    "security:check": "node scripts/check-repository.mjs",
+    "audit": "npm audit --audit-level=high"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.64.1",
+    "@vitest/coverage-v8": "5.0.5",
     "concurrently": "^10.0.6",
     "eslint": "^10.12.0",
     "eslint-plugin-react-hooks": "^7.1.1",
