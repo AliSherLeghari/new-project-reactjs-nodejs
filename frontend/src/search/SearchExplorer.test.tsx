@@ -349,6 +349,18 @@ describe('errors, cooldown, and request lifecycle', () => {
   });
 });
 
+it('describes local admission cooldown without falsely blaming GitHub', async () => {
+  setup(async () =>
+    response({ error: { code: 'REQUEST_LIMITED' } }, 429, {
+      'Retry-After': '1',
+    }),
+  );
+  submit();
+  await waitFor(() => expect(status()).toHaveTextContent('request limit'));
+  expect(status()).not.toHaveTextContent('GitHub');
+  expect(screen.getByRole('button', { name: 'Retry search' })).toBeDisabled();
+});
+
 describe('runtime API contract checks', () => {
   const request = { ...initialFilters, q: 'react', page: 1 };
   it.each([
