@@ -1,3 +1,4 @@
+import { contributionLabels, type IssueFilter } from './contributionIssues.js';
 import { invalidInput } from './errors.js';
 
 export interface SearchInput {
@@ -102,4 +103,15 @@ export function validateRepository(
     );
   }
   return { owner: owner.toLowerCase(), repo: repo.toLowerCase() };
+}
+
+export function validateIssueFilter(
+  query: Record<string, unknown>,
+): IssueFilter {
+  if (Object.keys(query).some((key) => key !== 'label'))
+    invalidInput('Unknown issue parameter.');
+  const label = text(query.label, 'label') ?? 'good-first-issue';
+  if (!Object.hasOwn(contributionLabels, label))
+    invalidInput('label must be good-first-issue or help-wanted.');
+  return label as IssueFilter;
 }

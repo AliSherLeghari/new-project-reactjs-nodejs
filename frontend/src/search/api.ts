@@ -9,17 +9,17 @@ export class SearchError extends Error {
     super(message);
   }
 }
-function invalidResponse(): never {
+export function invalidResponse(): never {
   throw new SearchError(
     'The backend returned an unexpected response. Please try again.',
   );
 }
-function object(value: unknown): Record<string, unknown> {
+export function object(value: unknown): Record<string, unknown> {
   if (typeof value !== 'object' || value === null || Array.isArray(value))
     invalidResponse();
   return value as Record<string, unknown>;
 }
-function count(value: unknown): number {
+export function count(value: unknown): number {
   if (typeof value !== 'number' || !Number.isSafeInteger(value) || value < 0)
     invalidResponse();
   return value;
@@ -32,7 +32,7 @@ function nullableText(value: unknown): string | null {
   if (value !== null && typeof value !== 'string') invalidResponse();
   return value;
 }
-function repository(value: unknown): Repository {
+export function parseRepository(value: unknown): Repository {
   const item = object(value);
   if (
     typeof item.name !== 'string' ||
@@ -104,7 +104,7 @@ export function parseSearchResult(
         body.repositories.length !== request.perPage))
   )
     invalidResponse();
-  return { repositories: body.repositories.map(repository), pagination };
+  return { repositories: body.repositories.map(parseRepository), pagination };
 }
 function retryTime(response: Response, body: unknown): number | undefined {
   if (response.status !== 429 && response.status !== 503) return undefined;
@@ -168,6 +168,18 @@ export async function searchRepositories(
     per_page: String(request.perPage),
   });
   if (request.language) query.set('language', request.language);
+  return requestJson(`/api/repositories?${query}`, signal, (body) =>
+    parseSearchResult(body, request),
+  );
+}
+
+// Shared transport for search, details, and contribution issues; no browser-direct GitHub calls.
+export async function requestJson<T>(
+  path: string,
+  signal: AbortSignal,
+  parse: (body: unknown) => T,
+  context: 'search' | 'details' | 'issues' = 'search',
+): Promise<T> {
   const controller = new AbortController();
   const cancel = () => controller.abort();
   signal.addEventListener('abort', cancel, { once: true });
@@ -178,7 +190,7 @@ export async function searchRepositories(
     controller.abort();
   }, 10_000);
   try {
-    const response = await fetch(`/api/repositories?${query}`, {
+    const response = await fetch(path, {
       signal: controller.signal,
     });
     let body: unknown;
@@ -190,16 +202,30 @@ export async function searchRepositories(
     }
     if (!response.ok)
       throw new SearchError(
-        messages[response.status] ?? 'Search failed. Please try again later.',
+        context === 'search'
+          ? (messages[response.status] ??
+              'Search failed. Please try again later.')
+          : response.status === 404
+            ? 'Public repository not found, or issues are unavailable for this repository.'
+            : response.status === 429
+              ? 'GitHub’s request limit was reached. Wait before trying again.'
+              : response.status === 504
+                ? 'GitHub took too long to respond. Please try again later.'
+                : 'Repository data is temporarily unavailable. Please try again later.',
         response.status,
         retryTime(response, body),
       );
-    return parseSearchResult(body, request);
+    return parse(body);
   } catch (error) {
     if (signal.aborted)
       throw new DOMException('Search cancelled.', 'AbortError');
     if (timedOut)
-      throw new SearchError('The search timed out. Please try again.', 504);
+      throw new SearchError(
+        context === 'search'
+          ? 'The search timed out. Please try again.'
+          : 'The request timed out. Please try again.',
+        504,
+      );
     if (error instanceof SearchError) throw error;
     throw new SearchError(
       'Cannot reach the backend. Check your connection and try again.',

@@ -65,10 +65,8 @@ export function SearchExplorer() {
       <div className="search-card">
         <div className="section-heading">
           <div>
-            <p className="eyebrow">YOUR STARTING POINT</p>
-            <h2 id="search-title">Explore repositories</h2>
+            <h2 id="search-title">Search repositories</h2>
           </div>
-          <span className="badge">Public GitHub projects</span>
         </div>
         <p id="search-note">
           Search by name or topic. Choose your filters, then press Search. No

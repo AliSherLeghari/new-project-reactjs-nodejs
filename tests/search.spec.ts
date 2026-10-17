@@ -174,7 +174,7 @@ test('rate limit enforces a local cooldown without automatic requests', async ({
   expect(calls).toBe(1);
   await page.getByRole('button', { name: 'Retry search' }).click();
   await expect(
-    page.getByRole('link', { name: /octocat\/project-0/ }),
+    page.getByRole('link', { name: /^View octocat\/project-0 on GitHub/ }),
   ).toBeVisible();
   expect(calls).toBe(2);
 });

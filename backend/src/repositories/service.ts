@@ -1,3 +1,9 @@
+import {
+  mapIssueList,
+  contributionLabels,
+  type IssueFilter,
+  type IssuesResult,
+} from './contributionIssues.js';
 import { type GithubClient } from '../github/client.js';
 import { TtlCache } from './cache.js';
 import { count, mapRepository, record, type Repository } from './mapping.js';
@@ -21,21 +27,29 @@ export function createRepositoryService(
   client: GithubClient,
   options: { ttlMs?: number; maxEntries?: number; now?: () => number } = {},
 ) {
-  const cache = new TtlCache<SearchResult | { repository: Repository }>(
-    options.ttlMs,
-    options.maxEntries,
-    options.now,
-  );
-  async function cached<T extends SearchResult | { repository: Repository }>(
-    url: URL,
-    load: () => Promise<T>,
-  ): Promise<T> {
+  const cache = new TtlCache<
+    SearchResult | { repository: Repository } | IssuesResult
+  >(options.ttlMs, options.maxEntries, options.now);
+  async function cached<
+    T extends SearchResult | { repository: Repository } | IssuesResult,
+  >(url: URL, load: () => Promise<T>): Promise<T> {
     const key = url.href;
     const hit = cache.get(key);
     if (hit) return hit as T;
     const value = await load();
     cache.set(key, value);
     return value;
+  }
+  async function detail(
+    owner: string,
+    repo: string,
+  ): Promise<{ repository: Repository }> {
+    const url = new URL(
+      `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`,
+    );
+    return cached(url, async () => ({
+      repository: mapRepository(await client.get(url)),
+    }));
   }
   return {
     async search(input: SearchInput): Promise<SearchResult> {
@@ -77,16 +91,28 @@ export function createRepositoryService(
         };
       });
     },
-    async detail(
+    detail,
+    async issues(
       owner: string,
       repo: string,
-    ): Promise<{ repository: Repository }> {
+      label: IssueFilter,
+    ): Promise<IssuesResult> {
+      // Also protects direct issue requests when the platform proxy has private-repo access.
+      await detail(owner, repo);
       const url = new URL(
-        `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`,
+        `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues`,
       );
-      return cached(url, async () => ({
-        repository: mapRepository(await client.get(url)),
-      }));
+      url.search = new URLSearchParams({
+        state: 'open',
+        labels: contributionLabels[label],
+        per_page: '10',
+        page: '1',
+        sort: 'updated',
+        direction: 'desc',
+      }).toString();
+      return cached(url, async () =>
+        mapIssueList(await client.get(url), owner, repo, label),
+      );
     },
   };
 }
