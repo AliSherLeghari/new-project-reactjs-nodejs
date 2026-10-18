@@ -5,3 +5,13 @@ export function parsePort(value: string | undefined): number {
   }
   return Number(value);
 }
+
+export function parseGithubTimeout(value: string | undefined): number {
+  if (value === undefined) return 5000;
+  if (!/^\d+$/.test(value) || Number(value) < 100 || Number(value) > 30000) {
+    throw new Error(
+      'GITHUB_TIMEOUT_MS must be an integer between 100 and 30000.',
+    );
+  }
+  return Number(value);
+}
