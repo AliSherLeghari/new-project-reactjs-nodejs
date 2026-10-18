@@ -1,3 +1,7 @@
+import { existsSync } from 'node:fs';
+import path from 'node:path';
+import { createBoundary, type BoundaryOptions } from './security.js';
+import { validateRepository } from './repositories/validation.js';
 import express, { type ErrorRequestHandler } from 'express';
 import { createGithubClient } from './github/client.js';
 import { ApiError } from './repositories/errors.js';
@@ -31,7 +35,12 @@ export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
     });
     return;
   }
-  console.error('Request failed:', error);
+  console.error(
+    JSON.stringify({
+      event: 'request_failed',
+      request_id: res.locals.requestId ?? 'unavailable',
+    }),
+  );
   res.status(500).json({
     error: {
       code: 'INTERNAL_ERROR',
@@ -42,15 +51,72 @@ export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
 
 export function createApp(
   service: RepositoryService = createRepositoryService(createGithubClient()),
+  options: BoundaryOptions & {
+    frontendDir?: string;
+    isReady?: () => boolean;
+  } = {},
 ) {
   const app = express();
   app.disable('x-powered-by');
+  app.disable('trust proxy');
+  app.use(createBoundary(options));
   app.get('/api/health', (_req, res) => {
     res
       .set('Cache-Control', 'no-store')
       .json({ status: 'ok', service: 'opensource-explorer-api' });
   });
+  app.get('/api/ready', (_req, res) => {
+    const ready =
+      (options.isReady?.() ?? true) &&
+      (!options.frontendDir ||
+        existsSync(path.join(options.frontendDir, 'index.html')));
+    res.status(ready ? 200 : 503).json({
+      status: ready ? 'ready' : 'not_ready',
+      service: 'opensource-explorer-api',
+    });
+  });
   app.use('/api/repositories', createRepositoryRouter(service));
+  if (options.frontendDir) {
+    const frontendDir = path.resolve(options.frontendDir);
+    app.use(
+      express.static(frontendDir, {
+        index: false,
+        redirect: false,
+        dotfiles: 'ignore',
+        lastModified: false,
+        setHeaders(res, file) {
+          res.setHeader(
+            'Cache-Control',
+            file.startsWith(path.join(frontendDir, 'assets') + path.sep)
+              ? 'public, max-age=31536000, immutable'
+              : 'no-cache',
+          );
+        },
+      }),
+    );
+    app.get(/.*/, (req, res, next) => {
+      let frontendRoute = req.path === '/';
+      const match = /^\/repositories\/([^/]+)\/([^/]+)\/?$/.exec(req.path);
+      if (match) {
+        try {
+          validateRepository(
+            decodeURIComponent(match[1]),
+            decodeURIComponent(match[2]),
+          );
+          frontendRoute = true;
+        } catch {
+          frontendRoute = false;
+        }
+      }
+      if (!frontendRoute || !req.accepts('html')) {
+        next();
+        return;
+      }
+      res
+        .set('Cache-Control', 'no-cache')
+        .sendFile(path.join(frontendDir, 'index.html'));
+    });
+  }
   app.use((_req, res) => {
     res
       .status(404)

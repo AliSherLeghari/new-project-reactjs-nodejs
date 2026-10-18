@@ -1,0 +1,34 @@
+# Security review and residual risks
+
+Phase 5 baseline reviewed/tested on 2026-10-17. This is a scoped engineering review, not a penetration-test certificate. No authentication/session/private-user-data feature exists. Report findings privately through the repository owner's GitHub profile/contact where available; do not post secrets in public issues. No paid security service was enabled.
+
+## Threat scenarios and checks
+
+| Scenario                                                        | Control and actual evidence                                                                                                                                                                                                                          |
+| --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Arbitrary host / SSRF                                           | Fixed `https://api.github.com` client, redirect failure, validated names/query allowlists; mocked destination/path tests                                                                                                                             |
+| Unsafe external JSON / links                                    | Runtime checks in backend mappers and frontend parsers; HTTPS github.com owner/repo/issue path matching, no credentials/query/fragment, text rendering, noreferrer/noopener; tests reject unsafe records                                             |
+| Private data through proxy authentication                       | Issues service requires mapped public metadata first; test rejects private response before issue access. Public metadata/cache TTL means visibility/data may be stale; do not treat caching as instantaneous privacy revocation                      |
+| XSS / framing / third-party fetch                               | Production CSP self-only scripts/styles/connect, no unsafe-inline/eval, no object/base/frame ancestors; nosniff, DENY, referrer/permissions/CORP headers, no permissive CORS. Built browser test verifies an injected inline script does not execute |
+| Static traversal / secret file leak / SPA swallowing API errors | dotfiles ignored, static rooted at frontend/dist, explicit frontend-route-only fallback, unknown assets/API JSON404; production tests cover traversal/dotfile/API boundaries                                                                         |
+| Oversized/slow/method abuse                                     | No body parser, read API GET/HEAD only, 16KiB body bound/no API bodies, 4096 URL limit, Node header/request/socket bounds, ingress limiter; tests and configured runtime fields                                                                      |
+| Quota/memory exhaustion                                         | Fixed issue sample, no per-card issue prefetch, success TTL cache100, client table1000/120 reads/min/IP, no automatic GitHub retries/polling. Not a global GitHub quota budget or DDoS defense                                                       |
+| Forwarded-IP spoof                                              | trust proxy disabled; test changes X-Forwarded-For and still hits same limiter. A future trusted reverse-proxy chain must be assessed explicitly                                                                                                     |
+| Logs leaking query/IP/tokens                                    | Fresh server UUID, ignore client correlation ID, log only event/method/surface/status/duration/ID; generic error logs omit raw errors, URLs, bodies and IPs; test uses sensitive-looking input and checks absence                                    |
+| Dependency/actions/image supply chain                           | Frozen npm lockfile, SHA-pinned first-party actions and official Node index, dev-only coverage package, npm audit reports zero findings on this run. Pins need ongoing refresh; npm audit does not scan OS CVEs or prove no malicious package        |
+| Container privilege / filesystem                                | USER node UID1000, root-owned app files, read-only Compose, all capabilities dropped, no-new-privileges, tmpfs, process/memory/CPU bounds; actual container rejects writes with EROFS                                                                |
+| Shutdown / stuck requests                                       | Readiness drains, idle sockets close, ten-second forced deadline; runtime tests include a stalled connection and container normal SIGTERM exits0                                                                                                     |
+
+## Trust and data boundaries
+
+No PAT is required or read by the app; headers are fixed. Platform proxies may inject authentication independently. Never extract those credentials or bake proxy/env/npm auth files into Docker layers. The optional CA is public trust material supplied by a BuildKit secret mount and runtime read-only cloud overlay; TLS verification stays enabled. Only variable names/defaults are documented.
+
+CSP is enabled for production. Vite development requires its own HMR/style behavior and is not publicly deployed here. HSTS is intentionally absent on local HTTP: future TLS termination and trusted proxies belong to Phase 6 review, along with HTTPS redirects and secure transport verification.
+
+The app has no writable API, cookies or session, so a CSRF token/session security mechanism is not introduced. Same-origin browser restrictions do not prevent curl/bot abuse. Multiple clients can still consume the unauthenticated GitHub quota; cache/ingress limits are bounded local mitigations only. Cache/IP entries expire in memory and are not logged or persisted.
+
+## Verification limits
+
+`npm audit --audit-level=high` passed with zero reported findings; `scripts/check-repository.mjs` reports common token/private-key patterns and generated-file paths without printing values. This is not universal secret detection. No paid Advanced Security, hosted scanner, bot, registry publication, or OS/image-CVE scanner is configured. Image vulnerability scanning and native assistive/host TLS checks are NOT TESTED and remain explicit release-review items. Known GitHub policy/429/secondary/shared-IP limitations and process-local cache/limiter behavior remain residual availability risks.
+
+CI uses contents:read, no stored checkout credentials, no deployment secret, standard public runners and no artifact upload/paid storage. Avoid running untrusted code with elevated workflow events; this workflow uses push/pull_request, not pull_request_target. Do not broaden permissions or add secrets to make checks appear green.

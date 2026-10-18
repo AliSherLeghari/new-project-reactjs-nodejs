@@ -1,0 +1,14 @@
+# Optional Codex-only overlay; mounted public CA never becomes part of the image.
+services:
+  app:
+    build:
+      secrets:
+        - proxy_ca
+    environment:
+      NODE_USE_ENV_PROXY: '1'
+      NODE_EXTRA_CA_CERTS: /run/proxy-ca.pem
+    volumes:
+      - '${CODEX_PROXY_CERT:?Codex proxy CA path is required}:/run/proxy-ca.pem:ro'
+secrets:
+  proxy_ca:
+    file: '${CODEX_PROXY_CERT:?Codex proxy CA path is required}'

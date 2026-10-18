@@ -1,37 +1,23 @@
-# Project status
+# Current project status
 
-## Phase 4 — Repository details and contribution issues (Issue #6)
+## Phase5 — production engineering implemented, verification complete for review
 
-Branch `feat/phase-4-repository-details` begins at Phase 3 commit `2d4e39bc9accc59409fcfa2f2b22a3722d0f8424`. Existing dependency branches/PRs remain unmerged. ChatGPT handles opening the stacked PR with base `feat/phase-3-search-ui` after this branch is pushed.
+Branch `feat/phase-5-engineering` is stacked on Phase4 commit `2f25f7533ddc2ca5e272f3715e7ad93fcadbbfcb`. Tested implementation checkpoint `5ebaca4e448c72c93056973c0279ad9cc58d4ebb`; a later handoff commit adds final docs/screenshots and neutral rate-limit wording. Final handoff supplies branch-tip SHA. Existing PRs1/3/5/8 remain OPEN and unmerged; ChatGPT handles Phase5 PR creation onto `feat/phase-4-repository-details`.
 
-Implemented:
+Production Express now serves built React/API from one origin with explicit deep-route fallback, CSP/headers, safe request/admission limits, redacted UUID logs, readiness and bounded graceful shutdown. Multi-stage digest-pinned Node24 Docker, non-root/read-only Compose, cloud CA overlay and least-privilege quality/Docker Actions jobs are implemented. No runtime library, database/auth, paid service, image publication, deployment or Phase6 work was added; only dev coverage-v8@5.0.5 is new.
 
-- Shareable `/repositories/:owner/:repo` pages using the existing Express detail endpoint, History API navigation, direct refresh, back/forward, focus/title updates, and preserved in-memory search results.
-- Safe repository metadata, distinct internal/external actions, loading/not-found/error/timeout/manual-retry states, stale cancellation, shared detail/issue cooldown, and StrictMode duplicate-request protection.
-- Bounded public contribution issues via `GET /api/repositories/:owner/:repo/issues`, two allowlisted labels, public visibility checks, PR exclusion, runtime contracts, safe links, and the existing 60-second/100-entry cache.
-- Compact search-first layout, restrained borders/spacing, responsive cards/details, visible focus, labeled controls, and explicit sample/maintainer-label limitations.
-- `.gitignore` protections for build metadata, editor/OS files, and temporary/backup files. No dependency package or service was added.
+## Actual evidence
 
-## Verified evidence
+- Clean npm ci367 packages; check81 frontend/154 backend, both builds; V8 frontend97.33% lines/94.25% branches and backend97.93% lines/95.97% branches;90/85 thresholds passed.
+- Cloud audit0 reported npm findings; tracked artifact/common-secret-pattern review clean. This is not an OS/penetration audit.
+- Chromium13 development tests and5 built-production tests passed, including360/390/768/1280, reduced motion, CSP, deep refresh, keyboard/axe and no overflow. Reviewed production fixture screenshots are linked from README/report.
+- Docker daemon28.4.0/vfs and Compose2.40.3 actually used. Image and Compose builds, healthy run, UID1000, EROFS, custom PORT4000, UI/assets/API/deep-link smoke and SIGTERM exit0 passed. Runtime excludes source/dev/test/session paths; containers/networks cleaned up.
+- [Hosted Engineering39051249057](https://github.com/AliSherLeghari/new-project-reactjs-nodejs/actions/runs/39051249057) passed quality/docker on exact implementation ref via push before any merge. Run/step metadata read through API; raw log download blocked by results-receiver host403. Final handoff branch checks are separate and reported in the handoff.
 
-- `npm run check`: formatting, lint, both workspace type checks, 80 frontend tests, 134 backend tests, and both production builds passed.
-- Chromium: 13 passed, including the existing eight tests plus five Phase 4 browser tests; zero axe violations in tested states.
-- Actual search/details screenshots reviewed at 390px and 1280px, plus mobile empty and not-found states, saved under `docs/screenshots/` with fixture-data labeling.
-- Manual built-module/Express smoke against public `microsoft/vscode` returned 10 open good-first issues; repeated request used cache. Exactly two upstream calls occurred: public repository metadata and the issue list. No app Authorization header; quota 15,000 suggests platform proxy authentication, so truly anonymous wire access is not proven.
-- Tracked-file/ignore checks found no generated outputs, environment-secret files, or common token/private-key patterns. No new install/audit or physical Android result is claimed.
+[PHASE_PROGRESS](PHASE_PROGRESS.md) is the permanent historical journal with provenance, exact refs, requirements, changes, tests and limitations for Phases1–5. [PHASE_5_VERIFICATION](PHASE_5_VERIFICATION.md) contains detailed commands/failures/results. [Lesson5](learning/LESSON_05_PRODUCTION_ENGINEERING.md), architecture/API/security/ADRs/operations documents explain the real implementation.
 
-See [verification](PHASE_4_VERIFICATION.md) and [Lesson 4](learning/LESSON_04_REPOSITORY_DETAILS.md) for actual commands, architecture, functions, tests, and tradeoffs.
+## Next gates
 
-## Remaining limitations
+Review progress/evidence/code and final CI, decide outstanding native/image/traffic checks, verify a genuinely free host and its actual TLS/proxy/routing/limits, then obtain explicit Phase6 and integration approval. No public deployment is verified or authorized. OS-image CVEs, physical/native assistive behavior, host capacity/cold-start/TLS and laptop reproduction remain NOT TESTED; see [readiness](DEPLOYMENT_READINESS.md).
 
-1. Contribution lists are only the first 10 recently updated matching entries before PR/nonmatching-label filtering; no completeness or contribution-acceptance guarantee.
-2. Public GitHub quotas/secondary limits/shared IP constraints remain. The cache is process-local and does not coalesce simultaneous misses or coordinate multiple instances.
-3. Cooldowns are in memory in the current search/detail experience; they do not persist across refreshes or coordinate tabs/screens. The backend remains authoritative.
-4. Search state survives internal navigation but resets on full refresh. Production hosting will need SPA fallback and separate API routing; no deployment is activated.
-5. Redirects fail closed. Moved repositories or disabled/restricted issue trackers can return unavailable/not-found errors.
-6. Chromium/axe checks do not certify physical Android performance or complete screen-reader compatibility.
-7. No authentication, database, bookmarks, CI/Actions, paid service, or Phase 5 work was added.
-
-## Android next step
-
-Review the pushed branch, screenshots, verification report, and Lesson 4 in GitHub Mobile or Android Chrome. ChatGPT can create the stacked PR onto `feat/phase-3-search-ui`. Approve each dependency separately; no merge or later phase is automatic.
+Cloud-first/local-hybrid tools are permitted by Issue7 comments. Use OPERATIONS for optional laptop verification rather than treating a phone/laptop as a prerequisite. Every future implementation task must update PHASE_PROGRESS and its own verification report in the same commit(s).

@@ -1,0 +1,54 @@
+name: Engineering
+on:
+  push:
+    branches: [main, 'feat/**']
+  pull_request:
+    branches: [main, 'feat/**']
+permissions:
+  contents: read
+concurrency:
+  group: engineering-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: '24.19.0'
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm run test:coverage
+      - run: npm run security:check
+      - run: npm run audit
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - run: npm run test:production
+  docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: '24.19.0'
+      - run: docker info --format 'Server={{.ServerVersion}}'
+      - run: docker compose build
+      - run: docker compose up -d --wait --wait-timeout 60
+      - run: node scripts/smoke-production.mjs http://127.0.0.1:8080
+      - name: Verify non-root and immutable runtime
+        run: |
+          docker compose exec -T app node -e "if(process.getuid()===0)process.exit(1);try{require('node:fs').writeFileSync('/app/forbidden','x');process.exit(1)}catch(e){if(!['EROFS','EACCES'].includes(e.code))throw e}"
+      - name: Verify graceful stop
+        run: |
+          docker compose stop
+          test "$(docker inspect --format '{{.State.ExitCode}}' "$(docker compose ps -aq app)")" = 0
+      - if: always()
+        run: docker compose down --remove-orphans

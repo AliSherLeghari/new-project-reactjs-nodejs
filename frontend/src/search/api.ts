@@ -151,7 +151,7 @@ function retryTime(response: Response, body: unknown): number | undefined {
 const messages: Record<number, string> = {
   400: 'The search was rejected. Check your search text and filters.',
   404: 'The search endpoint was not found. Please try again later.',
-  429: 'GitHub’s request limit was reached. Wait before searching again.',
+  429: 'The request limit was reached. Wait before searching again.',
   502: 'The backend could not get valid results from GitHub. Please try again.',
   503: 'Search is temporarily unavailable. Please try again later.',
   504: 'GitHub took too long to respond. Please try again later.',
@@ -208,7 +208,7 @@ export async function requestJson<T>(
           : response.status === 404
             ? 'Public repository not found, or issues are unavailable for this repository.'
             : response.status === 429
-              ? 'GitHub’s request limit was reached. Wait before trying again.'
+              ? 'The request limit was reached. Wait before trying again.'
               : response.status === 504
                 ? 'GitHub took too long to respond. Please try again later.'
                 : 'Repository data is temporarily unavailable. Please try again later.',
