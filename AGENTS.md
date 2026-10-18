@@ -13,7 +13,10 @@
 - Add an actual-code lesson under `docs/learning/` for each phase, including architecture, examples, tests, limitations, interview Q&A, and exercises.
 - Keep GitHub changes in a feature branch and reviewable PR; never claim an unexecuted check passed.
 
-- Phase 3 implements React search against the existing Express API. Keep in-app repository details (Phase 4) and all later work deferred until explicitly authorized. See `docs/PROJECT_STATUS.md`.
-- Phase 3 is stacked on `feat/phase-2-github-api`; do not merge/rebase/delete dependency branches. ChatGPT manages PR creation after the Phase 3 branch is pushed.
+- Phase 4 includes repository details and bounded public contribution issues. Keep Phase 5 and later work deferred until explicitly authorized. See `docs/PROJECT_STATUS.md`.
+- Phase 4 is stacked on `feat/phase-3-search-ui`; do not merge/rebase/delete dependency branches or force-push. ChatGPT manages PR creation after the Phase 4 branch is pushed.
 - Search tests must use deterministic fixtures and avoid unnecessary live GitHub quota. Preserve cancellation, stale-response guards, safe URL checks, and rate-limit cooldowns.
 - Live smoke checks are optional: after building, `NODE_USE_ENV_PROXY=1 node scripts/smoke-github.mjs` makes at most two GitHub requests. Ordinary tests stay mocked and token-free.
+
+- Contribution issues must use allowlisted labels, public repository checks, fixed GitHub hosts, bounded requests/cache, and explicit pull-request exclusion. Preserve safe URLs, cancellation, and manual retry/cooldown.
+- Optional live issue smoke after build: `NODE_USE_ENV_PROXY=1 node scripts/smoke-issues.mjs`; routine tests remain mocked. Only intentionally documented screenshots belong in Git.

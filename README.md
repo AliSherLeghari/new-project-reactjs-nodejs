@@ -1,6 +1,6 @@
 # OpenSource Explorer
 
-A student full-stack learning project built with AI assistance and code review. The planned product helps people discover public GitHub repositories. **Phase 3 adds working React repository search, filters, cards, pagination, and error/cooldown handling through our own Express API. Repository details inside the app remain future work.**
+A student full-stack learning project built with AI assistance and code review. The planned product helps people discover public GitHub repositories. **Phase 4 adds shareable repository details and a bounded list of public contribution issues, alongside working search, filtering, and pagination.**
 
 ## What works
 
@@ -8,7 +8,8 @@ A student full-stack learning project built with AI assistance and code review. 
 - Loading, empty, validation, safe error/retry, and rate-limit cooldown states; superseded searches are cancelled and ignored.
 - Real backend connection check, response validation, five-second timeout, and retry.
 - Express `GET /api/health`, structured 404/500 responses, and validated `PORT` configuration.
-- Validated backend search/details, normalized public repository data, safe upstream errors, request timeout, and bounded TTL cache.
+- Shareable `/repositories/:owner/:repo` pages with detail loading, errors, manual retry, safe external links, and contribution-label filters.
+- Validated backend search/details/issues, explicit PR exclusion, safe upstream errors, request timeout, public-visibility checks, and a shared bounded TTL cache.
 - npm workspaces, TypeScript, formatting, linting, unit/integration tests, and Chromium browser tests.
 
 No database, authentication, GitHub token, paid API, hosted service, deployment, or GitHub Actions workflow is configured.
@@ -32,14 +33,14 @@ The writable cache path avoids the restricted home directory in this environment
 | Command                                            | Purpose                                              |
 | -------------------------------------------------- | ---------------------------------------------------- |
 | `npm run dev`                                      | Start frontend and backend watchers                  |
-| `npm run check`                                    | Formatting, lint, type checks, 150 tests, and builds |
+| `npm run check`                                    | Formatting, lint, type checks, 214 tests, and builds |
 | `npm run format`                                   | Format source and documentation                      |
-| `npm run test:e2e`                                 | Run eight browser tests; starts/stops dev servers    |
+| `npm run test:e2e`                                 | Run thirteen browser tests; starts/stops dev servers |
 | `CHROMIUM_PATH=/usr/bin/chromium npm run test:e2e` | Use this cloud environment's installed Chromium      |
 | `npm run build`                                    | Emit frontend assets and backend JavaScript          |
 | `npm run start -w backend`                         | Run compiled backend after building                  |
 
-Browser tests use Playwright. Without a system Chromium, its matching browser must be installed in the cloud environment before running tests. Tests cover 390px and 1280px widths, real health and backend validation responses, deterministic search fixtures, filters/pagination, cooldowns, failure/retry, keyboard focus, overflow, and axe accessibility checks. Routine checks do not call GitHub search. Automated checks do not replace manual assistive-technology testing or physical Android testing.
+Browser tests use Playwright. Without a system Chromium, its matching browser must be installed in the cloud environment before running tests. Tests cover 390px and 1280px widths, real health and backend validation responses, deterministic search fixtures, filters/pagination, cooldowns, failure/retry, keyboard focus, overflow, and axe accessibility checks. Routine checks do not call GitHub. Details tests additionally cover direct URLs, refresh/back/forward, issue filters, not-found and cooldown states, and safe links. Automated checks do not replace manual assistive-technology testing or physical Android testing.
 
 ## Health contract
 
@@ -61,7 +62,9 @@ Health indicates this Express process responds. It does not check GitHub availab
 ```text
 frontend/
   src/                 React UI, health client, styles, component tests
-    search/            Typed API client, search hook/form, cards, fixtures, tests
+    search/            Search form/hook/cards and shared typed JSON transport
+    details/           Detail/issue client, resource hooks, page, fixtures, tests
+    routing.tsx        Small History API router and internal links
   index.html           Accessible document entry
   vite.config.ts       React plugin, API proxy, test setup
   tsconfig.json
@@ -82,14 +85,18 @@ docs/
   learning/LESSON_01_FOUNDATION.md
   learning/LESSON_02_GITHUB_API.md
   learning/LESSON_03_REACT_SEARCH.md
+  learning/LESSON_04_REPOSITORY_DETAILS.md
   PHASE_1_VERIFICATION.md
   PHASE_2_VERIFICATION.md
   PHASE_3_VERIFICATION.md
+  PHASE_4_VERIFICATION.md
   screenshots/         Mobile/desktop screenshots using deterministic test data
   PROJECT_STATUS.md
 scripts/smoke-github.mjs
+scripts/smoke-issues.mjs
 tests/foundation.spec.ts
 tests/search.spec.ts
+tests/details.spec.ts
 AGENTS.md
 README.md
 package.json
@@ -118,7 +125,7 @@ Production builds are verified, but production routing and hosting are deferred.
 
 ## Quality, cost, and learning
 
-See [project status](docs/PROJECT_STATUS.md), [Phase 3 verification](docs/PHASE_3_VERIFICATION.md), and [Lesson 3](docs/learning/LESSON_03_REACT_SEARCH.md). [Phase 2 verification](docs/PHASE_2_VERIFICATION.md) and [Lesson 2](docs/learning/LESSON_02_GITHUB_API.md) describe the unchanged backend. [Phase 1 verification](docs/PHASE_1_VERIFICATION.md) and [Lesson 1](docs/learning/LESSON_01_FOUNDATION.md) remain historical foundation references. All selected libraries are free and open source. No external billable services were activated. Hosting terms and Actions eligibility must be verified before those later phases. The application sends no Authorization header. Live cloud responses may reflect platform proxy credentials; observed quotas must not be presented as the public unauthenticated allowance.
+See [project status](docs/PROJECT_STATUS.md), [Phase 4 verification](docs/PHASE_4_VERIFICATION.md), and [Lesson 4](docs/learning/LESSON_04_REPOSITORY_DETAILS.md). [Phase 3 verification](docs/PHASE_3_VERIFICATION.md) and [Lesson 3](docs/learning/LESSON_03_REACT_SEARCH.md) record the search implementation. [Phase 2 verification](docs/PHASE_2_VERIFICATION.md) and [Lesson 2](docs/learning/LESSON_02_GITHUB_API.md) explain the search/detail backend extended by Phase 4. [Phase 1 verification](docs/PHASE_1_VERIFICATION.md) and [Lesson 1](docs/learning/LESSON_01_FOUNDATION.md) remain historical foundation references. All selected libraries are free and open source. No external billable services were activated. Hosting terms and Actions eligibility must be verified before those later phases. The application sends no Authorization header. Live cloud responses may reflect platform proxy credentials; observed quotas must not be presented as the public unauthenticated allowance.
 
 Review each phase in a feature branch/PR. Merging requires the student's approval. Contributions and learning claims should accurately acknowledge AI-assisted implementation and distinguish reading, modifying, and independently writing code.
 
@@ -179,7 +186,7 @@ Enter a name or topic and optionally choose a language, sort, order, and 10/20/5
 
 The page clearly identifies the last submitted query/filters/page. Changing a filter disables old pagination/retry until you submit the new search, which starts at page 1. During loading, duplicate submissions are blocked; changing the draft allows a replacement search. Old requests are aborted and their late results ignored. Pagination places keyboard focus on the results heading.
 
-Cards show owner/name, description, language, stars, forks, and GitHub's combined open issue/PR count. Missing descriptions/languages are explicit. Repository links open GitHub in a new tab with safe `rel` attributes. No in-app detail screen exists yet.
+Cards show owner/name, description, language, stars, forks, and GitHub's combined open issue/PR count. Missing descriptions/languages are explicit. Repository links open GitHub in a new tab with safe `rel` attributes. The Phase 4 View details link opens the in-app repository page; the distinct GitHub link remains available.
 
 The browser calls only the relative `/api/repositories` endpoint using URLSearchParams, never `api.github.com`. The API client checks JSON object/array shapes, nullable strings, nonnegative counts, boolean pagination flags, matching page/page-size, the 1000-result window, and safe HTTPS GitHub repository URLs. TypeScript types alone are not treated as runtime validation. Extra fields are discarded; this is a deliberately small parser, not a general schema framework.
 
@@ -189,4 +196,61 @@ Search totals may change. Truncation and incomplete-result warnings remain visib
 
 [Mobile screenshot](docs/screenshots/phase-3-mobile.png) · [Desktop screenshot](docs/screenshots/phase-3-desktop.png). These show **deterministic test data**, not a live GitHub search, and the visible keyboard focus outline after pagination.
 
-Phase 3 branch `feat/phase-3-search-ui` starts from `feat/phase-2-github-api`. ChatGPT will create the stacked PR onto that Phase 2 branch after push. Existing PRs remain unmerged; no Phase 4, paid service, deployment, or Actions work is included.
+Phase 3 search work is tracked by PR #5 on `feat/phase-3-search-ui`, based on `feat/phase-2-github-api`. Phase 4 now extends that unmerged branch; dependency PRs remain separately reviewable.
+
+## Phase 4: details and contribution opportunities
+
+Select **View details** on a repository card or open `/repositories/:owner/:repo` directly. A small router uses the browser History API; normal internal clicks update the page without reloading, while modified/new-tab clicks keep native link behavior. Browser back/forward works, and the search component stays mounted but hidden to preserve its submitted results. Refreshing the whole app resets in-memory search state. No router package was added.
+
+Vite's development SPA fallback supports refreshing a detail URL. Future production hosting must rewrite non-API application routes to `index.html`, serve assets normally, and route `/api` to Express. A successful build is not a deployed routing guarantee.
+
+The page requests repository details before mounting its issues section. It shows owner/name, description/language (including explicit absent values), stars, forks, combined open issues/PR count, and a safe GitHub link. Detail and issue failures have separate loading/retry states; an issue failure leaves repository information visible. Requests are cancelled on route/filter changes or unmount, obsolete results ignored, and StrictMode's discarded effect is skipped before sending a request. A detail-page cooldown covers both resources, uses existing validated retry hints, and reenables manual retry without fetching automatically.
+
+### Contribution issues API
+
+```http
+GET /api/repositories/:owner/:repo/issues?label=good-first-issue
+```
+
+Only `label` is accepted: `good-first-issue` (default) maps to GitHub's `good first issue`, and `help-wanted` maps to `help wanted`. Unknown/repeated parameters are rejected. Names use the existing repository validator.
+
+The service first obtains validated public repository metadata, usually from cache, then calls the fixed official endpoint `/repos/{owner}/{repo}/issues` with `state=open`, `per_page=10`, `page=1`, `sort=updated`, `direction=desc`, and the mapped label. A cold direct issue request needs up to two upstream calls: one public-visibility check and one issue-list call. The public check matters because platform proxy authentication could otherwise expose private issue data. Search cards do not fetch issues.
+
+The response contains:
+
+```json
+{
+  "issues": [
+    {
+      "number": 42,
+      "title": "Example fixture title",
+      "state": "open",
+      "labels": ["good first issue"],
+      "url": "https://github.com/example/project/issues/42"
+    }
+  ],
+  "label": "good-first-issue",
+  "label_name": "good first issue",
+  "limit": 10,
+  "browse_url": "https://github.com/example/project/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22"
+}
+```
+
+This is an illustrative contract, not a live result. GitHub's repository issue-list endpoint returns PRs too: entries with `pull_request` are excluded. Other entries must have positive numbers, open state, text titles/labels, and an HTTPS GitHub URL matching the requested repository and `/issues/{number}`. Entries whose labels no longer match are omitted. No issue bodies/markdown/HTML are rendered. The frontend validates this small contract again and constructs its own fixed-host browse URL.
+
+This is a **sample of up to 10 upstream entries**, not all open issues or all matching issues. Filtering PRs/nonmatching labels may leave fewer than 10. The UI explains that maintainer labels do not guarantee difficulty, availability, or contribution acceptance and provides a GitHub link for the complete matching issue list. A zero-result response is a constructive empty state, not an outage.
+
+Issues use the existing fixed-host GitHub client, timeout/error mapping, and the same 100-entry/60-second successful-result cache as search/details. Labels have separate keys. Failures are not cached; reads do not extend TTL. No automatic retries, polling, pagination sweep, or issue prefetch across search cards is introduced. Repository renames/transfers still fail closed on redirects; disabled/restricted issue trackers may return a safe unavailable/not-found response.
+
+The optional manual cloud check is:
+
+```sh
+npm run build
+NODE_USE_ENV_PROXY=1 node scripts/smoke-issues.mjs
+```
+
+It requests public `microsoft/vscode` issues twice through the actual Express app and verifies that the cached repeat causes no new upstream calls. At most two upstream requests are made; the script has no retries. Phase 4's run passed; safe observations are in the verification report. App requests have no Authorization header, while the observed 15,000 quota suggests infrastructure-injected authentication, so truly anonymous outbound access is not claimed. Normal unauthenticated public GitHub limits (generally 60/hour/IP, separate search limits, secondary/shared-IP constraints) remain relevant. No service account, PAT, paid API, subscription, or billable hosting is configured.
+
+Reviewed deterministic browser screenshots: [search mobile](docs/screenshots/phase-4-search-mobile.png), [search desktop](docs/screenshots/phase-4-search-desktop.png), [details mobile](docs/screenshots/phase-4-details-mobile.png), [details desktop](docs/screenshots/phase-4-details-desktop.png), [empty issues](docs/screenshots/phase-4-empty-mobile.png), [not found](docs/screenshots/phase-4-not-found-mobile.png). These are controlled test data, not claims of live fixture repositories.
+
+Phase 4 branch `feat/phase-4-repository-details` starts at Phase 3 commit `2d4e39bc9accc59409fcfa2f2b22a3722d0f8424`. ChatGPT will create its stacked PR targeting `feat/phase-3-search-ui`. No PR is merged or created by this task; Phase 5 remains unstarted.

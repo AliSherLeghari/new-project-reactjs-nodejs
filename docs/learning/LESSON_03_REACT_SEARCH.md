@@ -1,5 +1,7 @@
 # Lesson 03: React search, asynchronous state, and safe API data
 
+This lesson records the Phase 3 snapshot. Phase 4 extends it with routing/details and extracts shared `requestJson()` transport; see [Lesson 4](LESSON_04_REPOSITORY_DETAILS.md). The repository parser is now exported as `parseRepository()` for reuse.
+
 ## What we implemented
 
 Phase 1 had preview inputs and a health check. Phase 2 added Express search/detail endpoints. Phase 3 connects a working React search form to **our own** `/api/repositories` endpoint. Users can search, filter, sort, page through results, retry failures, and follow repository links to GitHub.
