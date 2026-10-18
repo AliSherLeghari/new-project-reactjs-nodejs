@@ -1,97 +1,74 @@
-import { BackendStatus } from './BackendStatus';
+import { useEffect, useRef } from 'react';
+import { SearchExplorer } from './search/SearchExplorer';
+import { RepositoryDetails } from './details/RepositoryDetails';
+import { AppLink, useRoute } from './routing';
 
 export function App() {
+  const route = useRoute();
+  const kind = route.kind;
+  const owner = route.kind === 'detail' ? route.owner : '';
+  const repo = route.kind === 'detail' ? route.repo : '';
+  const routeKey = `${kind}/${owner}/${repo}`;
+  const previousRoute = useRef(routeKey);
+  useEffect(() => {
+    const id =
+      kind === 'search'
+        ? 'search-page-title'
+        : kind === 'detail'
+          ? 'detail-title'
+          : 'missing-title';
+    if (previousRoute.current !== routeKey || kind !== 'search')
+      document.getElementById(id)?.focus();
+    previousRoute.current = routeKey;
+    document.title =
+      kind === 'detail'
+        ? `${owner}/${repo} · OpenSource Explorer`
+        : 'OpenSource Explorer';
+  }, [kind, owner, repo, routeKey]);
   return (
     <>
       <a className="skip-link" href="#main">
         Skip to content
       </a>
       <header className="site-header">
-        <a className="brand" href="#main">
-          <span aria-hidden="true" className="brand-icon">
-            &lt;/&gt;
-          </span>{' '}
+        <AppLink className="brand" href="/">
           OpenSource Explorer
-        </a>
+        </AppLink>
         <nav aria-label="Main navigation">
-          <a href="#explore">Explore</a>
-          <a href="#about">About</a>
+          <AppLink href="/">Explore</AppLink>
         </nav>
       </header>
       <main id="main">
-        <section className="hero" aria-labelledby="hero-title">
-          <p className="eyebrow">OPEN CODE. NEW POSSIBILITIES.</p>
-          <h1 id="hero-title">
-            Find your next
-            <br />
-            <span>open-source adventure.</span>
-          </h1>
-          <p className="intro">
-            Discover projects worth exploring. Understand the code, meet new
-            ideas, and take your next step as a developer.
-          </p>
-          <a className="primary-link" href="#explore">
-            Explore the foundation <span aria-hidden="true">→</span>
-          </a>
-        </section>
-        <section
-          className="search-card"
-          id="explore"
-          aria-labelledby="search-title"
-        >
-          <div className="section-heading">
-            <div>
-              <p className="eyebrow">YOUR STARTING POINT</p>
-              <h2 id="search-title">Explore repositories</h2>
-            </div>
-            <span className="badge">Phase 1 · Foundation</span>
-          </div>
-          <p id="search-note">
-            Search is coming in a later phase. These controls preview the
-            experience; they do not send searches.
-          </p>
-          <div className="search-fields">
-            <div>
-              <label htmlFor="query">Repository or topic</label>
-              <input
-                id="query"
-                type="search"
-                placeholder="e.g. developer tools, react, accessibility"
-                aria-describedby="search-note"
-              />
-            </div>
-            <div>
-              <label htmlFor="language">Language</label>
-              <select id="language" aria-describedby="search-note">
-                <option>Any language</option>
-                <option>TypeScript</option>
-                <option>JavaScript</option>
-                <option>Python</option>
-                <option>Go</option>
-              </select>
-            </div>
-            <button disabled>Search · coming soon</button>
-          </div>
-          <BackendStatus />
-        </section>
-        <section className="about" id="about" aria-labelledby="about-title">
-          <div>
-            <p className="eyebrow">BUILT TO LEARN</p>
-            <h2 id="about-title">
-              A small start.
-              <br />A real full-stack foundation.
-            </h2>
-          </div>
-          <p>
-            OpenSource Explorer is a student learning project built with React,
-            TypeScript, and Express. Today, the interface talks to a live
-            backend. Next, we’ll connect the official GitHub REST API to bring
-            public repositories into view.
-          </p>
-        </section>
+        <div hidden={route.kind !== 'search'}>
+          <section className="search-intro" aria-labelledby="search-page-title">
+            <h1 id="search-page-title" tabIndex={-1}>
+              Repository explorer
+            </h1>
+            <p>
+              Search public repositories and explore open contribution issues.
+            </p>
+          </section>
+          <SearchExplorer />
+        </div>
+        {route.kind === 'detail' && (
+          <RepositoryDetails owner={route.owner} repo={route.repo} />
+        )}
+        {route.kind === 'missing' && (
+          <section className="detail-page">
+            <h1 id="missing-title" tabIndex={-1}>
+              Page not found
+            </h1>
+            <p>This address does not identify a valid repository page.</p>
+            <AppLink href="/">Back to search</AppLink>
+          </section>
+        )}
       </main>
       <footer>
-        OpenSource Explorer <span>Built one thoughtful step at a time.</span>
+        OpenSource Explorer{' '}
+        <span>
+          A student project built with React, TypeScript, and the public GitHub
+          API.
+        </span>
       </footer>
     </>
   );

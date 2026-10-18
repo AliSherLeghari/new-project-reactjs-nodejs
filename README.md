@@ -1,108 +1,101 @@
 # OpenSource Explorer
 
-A student full-stack learning project built with AI assistance and code review. The planned product helps people discover public GitHub repositories. **Phase 1 implements the foundation only: repository search is not implemented.**
+Search public GitHub repositories, inspect a project, and discover a bounded sample of open contribution issues. Built as an AI-assisted software-engineering learning/portfolio project with React, TypeScript, Express and the official GitHub REST API.
 
-## What works
+**Phase5 production engineering is implemented and verified for review. Nothing is deployed or merged.** ChatGPT manages the stacked PR; Phase6 and public hosting need separate authorization.
 
-- Responsive React homepage with navigation, labeled search/language preview controls, and explicit coming-soon messaging.
-- Real backend connection check, response validation, five-second timeout, and retry.
-- Express `GET /api/health`, structured 404/500 responses, and validated `PORT` configuration.
-- npm workspaces, TypeScript, formatting, linting, unit/integration tests, and Chromium browser tests.
+[Permanent phase progress](docs/PHASE_PROGRESS.md) · [Current status](docs/PROJECT_STATUS.md) · [Phase5 evidence](docs/PHASE_5_VERIFICATION.md) · [Deployment readiness](docs/DEPLOYMENT_READINESS.md)
 
-No database, authentication, GitHub token, paid API, hosted service, deployment, or GitHub Actions workflow is configured.
+## Application
 
-## Cloud development
+- Explicit repository search with language/sort/order/page size, runtime-validated cards, bounded pagination and truthful incomplete/truncated warnings.
+- Shareable detail routes with refresh/back/forward, preserved in-memory search and distinct safe GitHub links.
+- Up to10 open contribution entries labeled good first issue/help wanted, explicitly excluding PRs and stating that labels are not contribution guarantees.
+- Loading/empty/errors, cancellation/stale-result guards, manual retry and rate-limit cooldown; no automatic GitHub polling.
+- Compact accessible layout, keyboard focus/status, reduced motion and automated checks at360/390/768/1280.
 
-All commands below are for Codex Cloud; students can ask Codex to run them from Android. No local terminal is required. Use Node.js 24.x and npm 11.x (verified: Node 24.19.0, npm 11.9.0).
+No app token, login, database, paid API, registry publication or hosted service is required. Public GitHub quotas still apply; cloud proxy authentication can inflate observed quotas independently of our token-free request code.
 
-```sh
-cd /workspace/new-project-reactjs-nodejs
-npm ci --cache /tmp/opensource-npm-cache
-npm run dev
-```
-
-The writable cache path avoids the restricted home directory in this environment. The frontend listens on port 5173 and proxies `/api` requests to port 3001. These are internal development addresses, not a public deployment. Stop both processes with Ctrl+C in the managing cloud process. `concurrently -k` stops the sibling process when one exits.
-
-`PORT=4000 npm run dev -w backend` changes the backend port. If using the frontend with a changed backend port, update the proxy target in `frontend/vite.config.ts` too. `backend/.env.example` documents the setting; it is not loaded automatically. Set `PORT` in the process environment. No secrets are needed.
-
-## Commands
-
-| Command                                            | Purpose                                                      |
-| -------------------------------------------------- | ------------------------------------------------------------ |
-| `npm run dev`                                      | Start frontend and backend watchers                          |
-| `npm run check`                                    | Formatting, lint, type checks, 19 tests, and builds          |
-| `npm run format`                                   | Format source and documentation                              |
-| `npm run test:e2e`                                 | Run three full-stack browser tests; starts/stops dev servers |
-| `CHROMIUM_PATH=/usr/bin/chromium npm run test:e2e` | Use this cloud environment's installed Chromium              |
-| `npm run build`                                    | Emit frontend assets and backend JavaScript                  |
-| `npm run start -w backend`                         | Run compiled backend after building                          |
-
-Browser tests use Playwright. Without a system Chromium, its matching browser must be installed in the cloud environment before running tests. Tests cover 390px and 1280px widths, real health connectivity, failure/retry, keyboard focus, overflow, and axe accessibility checks. Automated checks do not replace manual assistive-technology testing or physical Android testing.
-
-## Health contract
-
-```http
-GET /api/health
-HTTP/1.1 200 OK
-Content-Type: application/json
-Cache-Control: no-store
-```
-
-```json
-{ "status": "ok", "service": "opensource-explorer-api" }
-```
-
-Health indicates this Express process responds. It does not check GitHub availability or future dependencies. The UI checks on mount and manual retry, not continuously.
-
-## Architecture and files
-
-```text
-frontend/
-  src/                 React UI, health client, styles, component tests
-  index.html           Accessible document entry
-  vite.config.ts       React plugin, API proxy, test setup
-  tsconfig.json
-  package.json
-backend/
-  src/
-    app.ts             Express factory and error middleware
-    config.ts          Port validation
-    server.ts          Listener and shutdown handling
-    app.test.ts        API and configuration tests
-  .env.example
-  tsconfig.json
-  tsconfig.build.json
-  package.json
-docs/
-  learning/LESSON_01_FOUNDATION.md
-  PHASE_1_VERIFICATION.md
-tests/foundation.spec.ts
-AGENTS.md
-README.md
-package.json
-package-lock.json
-playwright.config.ts
-eslint.config.js
-tsconfig.base.json
-.prettierrc.json
-.prettierignore
-.gitignore
-```
-
-Learning materials live in `docs/learning/` rather than a duplicate root `learning/` folder.
+## Architecture
 
 ```mermaid
 flowchart LR
-  Browser[React in browser] -->|GET /api/health| Vite[Vite development proxy]
-  Vite --> Express[Express on port 3001]
-  Express -->|JSON| Vite
-  Vite -->|JSON| Browser
+  Browser[Built React / History API] -->|same origin| Express[Express API + static SPA]
+  Express --> Validation[Validation / service / mappers]
+  Validation --> Cache[Bounded in-memory TTL cache]
+  Validation --> Client[Fixed-host GitHub client]
+  Client --> GitHub[Public GitHub REST API]
 ```
 
-Production builds are verified, but production routing and hosting are deferred. The Vite proxy is development-only; a future deployment needs same-origin `/api` routing or an explicitly configured API origin and restrictive CORS. The backend currently serves JSON only, not frontend assets.
+Development uses Vite5173 → Express3001. Production is one Node service: Express serves prebuilt React assets and `/api`. Only supported frontend routes receive SPA HTML; API/asset errors stay JSON404. CSP/security headers, read-only API/request limits, safe correlation logs, readiness and graceful shutdown protect the current surface. No microservices, DB, auth or permissive CORS was added.
 
-## Quality, cost, and learning
+| Path                                                               | Purpose                                                                                           |
+| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
+| `frontend/src/search/`                                             | Controlled search, typed/runtime API parsing, cards and cancellation                              |
+| `frontend/src/details/`, `routing.tsx`                             | Detail/issues pages, resource lifecycle, History API routing                                      |
+| `backend/src/repositories/`                                        | HTTP routes, validators, normalized contracts, service/cache, issue filtering                     |
+| `backend/src/github/client.ts`                                     | Fixed GitHub origin/headers, timeouts and safe upstream errors                                    |
+| `backend/src/app.ts`, `security.ts`, `runtime.ts`, `server.ts`     | HTTP/static composition, security/admission/logs, listener/shutdown, entry configuration          |
+| `Dockerfile`, `compose*.yaml`, `.github/workflows/engineering.yml` | Multi-stage packaging, one-service runtime and hosted quality/Docker CI                           |
+| `docs/`                                                            | Progress journal, per-phase evidence/lessons, architecture/API/security/operations/ADRs/readiness |
 
-See [Phase 1 verification](docs/PHASE_1_VERIFICATION.md) and [Lesson 1](docs/learning/LESSON_01_FOUNDATION.md). All selected libraries are free and open source. No external billable services were activated. Hosting terms and Actions eligibility must be verified before those later phases. Unauthenticated GitHub API integration and rate-limit handling are also later work.
+[Requirements and architecture](docs/ARCHITECTURE.md) · [API contract](docs/API.md) · [Decisions](docs/adr/0001-engineering-decisions.md) · [Security review](docs/SECURITY.md)
 
-Review each phase in a feature branch/PR. Merging requires the student's approval. Contributions and learning claims should accurately acknowledge AI-assisted implementation and distinguish reading, modifying, and independently writing code.
+## Run and verify
+
+Use Node24.x, npm and the committed lockfile. Cloud Node24.19.0/npm11.9.0 and the pinned official Node24 image (24.22.0 at the recorded digest) were verified.
+
+```sh
+npm ci --cache /tmp/opensource-npm-cache
+npm run check
+npm run test:coverage
+npm run build
+npm start
+```
+
+Root `npm start` selects production and serves UI/API on PORT3001; build first. Normal laptops can use their default npm cache. For development: `npm run dev`; in the managed cloud use `NODE_USE_ENV_PROXY=1 npm run dev` and preserve its proxy/CA settings. Cloud-first/local-hybrid tools are permitted; no laptop work has been falsely reported as executed.
+
+| Command                                                   | Verification                                                                        |
+| --------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `npm run check`                                           | Formatting, lint, strict workspace types,81 frontend/154 backend tests, both builds |
+| `npm run test:coverage`                                   | V8 measured scope; thresholds90% lines/statements,85% branches/functions            |
+| `npm run test:e2e`                                        | 13 development Chromium tests with controlled GitHub data                           |
+| `npm run test:production`                                 | 5 built Express-served browser/CSP/deep-link/accessibility tests                    |
+| `npm run audit`                                           | npm advisory scan, high/critical failure threshold                                  |
+| `npm run security:check`                                  | Tracked artifact/common-secret-pattern checks; not universal secret detection       |
+| `node scripts/smoke-production.mjs http://127.0.0.1:8080` | Bounded readiness wait + real HTML/assets/API/deep-link smoke                       |
+
+This cloud worker uses `CHROMIUM_PATH=/usr/bin/chromium` before browser commands. A normal laptop/CI can install Playwright Chromium with `npx playwright install --with-deps chromium`. Never reinstall dependencies while tests are running. Commands and troubleshooting are detailed in [OPERATIONS](docs/OPERATIONS.md).
+
+## Docker and CI evidence
+
+```sh
+docker info
+docker compose build
+docker compose up -d --wait --wait-timeout 60
+node scripts/smoke-production.mjs http://127.0.0.1:8080
+docker compose stop
+docker compose down --remove-orphans
+```
+
+The multi-stage official Node24 image is deliberately digest-pinned. Builder tools remain outside the backend-only production dependency/runtime stage. It runs as UID1000; Compose uses read-only filesystem, dropped capabilities, no-new-privileges and resource bounds. Container health, custom PORT4000, UI/assets/API/deep-link checks, EROFS and normal SIGTERM exit0 were actually verified in Codex Cloud. The optional cloud overlay supplies proxy CA by secret/read-only mount without baking session configuration; see the runbook before running Docker here.
+
+**Actual hosted run:** [Engineering39051249057](https://github.com/AliSherLeghari/new-project-reactjs-nodejs/actions/runs/39051249057) passed quality and Docker jobs on implementation `5ebaca4e448c72c93056973c0279ad9cc58d4ebb`. Public standard Ubuntu runners, SHA-pinned first-party actions, contents:read, concurrency cancellation; no paid runners, image push, artifact upload or deployment. Raw hosted log download was policy-blocked; job/step conclusions were read from GitHub API, while detailed test/coverage numbers come from cloud execution. Check the final branch's latest CI separately after handoff commits.
+
+Measured cloud coverage: frontend97.33% lines/94.25% branches; backend97.93% lines/95.97% branches. npm audit reported0 findings in cloud. These are scoped observations, not security/performance certification. No OS-image CVE scan, native screen-reader or host/load/TLS test is claimed. The readiness checklist preserves those gaps and the owner review/hosting-cost/Phase6 gates.
+
+## API and configuration
+
+- `GET /api/health`: liveness only; `GET /api/ready`: process/assets/draining readiness, no GitHub probe.
+- `GET /api/repositories?q=react&language=TypeScript&sort=stars&order=desc&page=1&per_page=20`.
+- `GET /api/repositories/:owner/:repo` and `.../issues?label=good-first-issue|help-wanted`.
+
+`PORT` defaults3001; `GITHUB_TIMEOUT_MS` defaults5000 (100–30000) per upstream call. Root npm start forces NODE_ENV=production. `.env.example` documents settings without auto-loading or secrets. Frontend deadline is10s. Full contracts, error codes, request/cache/quota limits and readiness semantics are in [API](docs/API.md).
+
+## Learn and review
+
+[Lesson1 foundation](docs/learning/LESSON_01_FOUNDATION.md) · [Lesson2 GitHub backend](docs/learning/LESSON_02_GITHUB_API.md) · [Lesson3 React search](docs/learning/LESSON_03_REACT_SEARCH.md) · [Lesson4 details/issues](docs/learning/LESSON_04_REPOSITORY_DETAILS.md) · [Lesson5 production engineering](docs/learning/LESSON_05_PRODUCTION_ENGINEERING.md)
+
+Reviewed production fixture screenshots: [360px search](docs/screenshots/phase-5-production-search-360.png), [768px details](docs/screenshots/phase-5-production-details-768.png), [1280px details](docs/screenshots/phase-5-production-details-1280.png). These show deterministic test data, not a live fixture repository. Actual-data live checks in earlier phases are recorded separately with proxy-auth caveats.
+
+Every future implementation task must update the central progress file and its own verification report in the same commit(s). Keep claims truthful about AI assistance, independently authored work, test provenance, exact refs and deployment status. Phase5 is stacked on `feat/phase-4-repository-details`; no dependency PR is merged automatically.
