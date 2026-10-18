@@ -2,9 +2,17 @@
 
 Search public GitHub repositories, inspect a project, and discover a bounded sample of open contribution issues. Built as an AI-assisted software-engineering learning/portfolio project with React, TypeScript, Express and the official GitHub REST API.
 
-**Phase5 production engineering is implemented and verified for review. Nothing is deployed or merged.** ChatGPT manages the stacked PR; Phase6 and public hosting need separate authorization.
+**Current status (2026-10-19):** The five development phases are integrated into `main`, and the project owner reports a public Render deployment. The recorded Phase 5 tests and CI checks were performed before deployment; the live site's availability and performance have not been independently audited.
 
 [Permanent phase progress](docs/PHASE_PROGRESS.md) · [Current status](docs/PROJECT_STATUS.md) · [Phase5 evidence](docs/PHASE_5_VERIFICATION.md) · [Deployment readiness](docs/DEPLOYMENT_READINESS.md)
+
+## Live demo
+
+**Website:** [https://opensource-explorer.onrender.com/](https://opensource-explorer.onrender.com/)
+
+The application is hosted on a Render free web service. Following inactivity, the server may sleep and the first visit may take around a minute to wake up. The live URL and hosting status are owner-reported; automated public-host verification is not claimed here. If the service is temporarily unavailable, the project can be run locally using the instructions below.
+
+**Source:** [GitHub repository](https://github.com/AliSherLeghari/opensource-explorer) · **Public API health:** [Health endpoint](https://opensource-explorer.onrender.com/api/health)
 
 ## Application
 
@@ -14,7 +22,7 @@ Search public GitHub repositories, inspect a project, and discover a bounded sam
 - Loading/empty/errors, cancellation/stale-result guards, manual retry and rate-limit cooldown; no automatic GitHub polling.
 - Compact accessible layout, keyboard focus/status, reduced motion and automated checks at360/390/768/1280.
 
-No app token, login, database, paid API, registry publication or hosted service is required. Public GitHub quotas still apply; cloud proxy authentication can inflate observed quotas independently of our token-free request code.
+The application itself needs no GitHub API token, app login, database, or paid API. A hosted service is optional for local operation; the public demo is deployed separately on Render's free offering. Public GitHub quotas still apply; cloud proxy authentication can inflate observed quotas independently of our token-free request code.
 
 ## Architecture
 
@@ -65,6 +73,8 @@ Root `npm start` selects production and serves UI/API on PORT3001; build first. 
 | `npm run security:check`                                  | Tracked artifact/common-secret-pattern checks; not universal secret detection       |
 | `node scripts/smoke-production.mjs http://127.0.0.1:8080` | Bounded readiness wait + real HTML/assets/API/deep-link smoke                       |
 
+If a host configures `NODE_ENV=production` during dependency installation, use `npm ci --include=dev` for the build: TypeScript, Vite, and type definitions are development dependencies. The production server is started with `npm start`. The project owner has also reported successful local Windows startup; this is distinct from the recorded Codex/CI checks.
+
 This cloud worker uses `CHROMIUM_PATH=/usr/bin/chromium` before browser commands. A normal laptop/CI can install Playwright Chromium with `npx playwright install --with-deps chromium`. Never reinstall dependencies while tests are running. Commands and troubleshooting are detailed in [OPERATIONS](docs/OPERATIONS.md).
 
 ## Docker and CI evidence
@@ -80,7 +90,7 @@ docker compose down --remove-orphans
 
 The multi-stage official Node24 image is deliberately digest-pinned. Builder tools remain outside the backend-only production dependency/runtime stage. It runs as UID1000; Compose uses read-only filesystem, dropped capabilities, no-new-privileges and resource bounds. Container health, custom PORT4000, UI/assets/API/deep-link checks, EROFS and normal SIGTERM exit0 were actually verified in Codex Cloud. The optional cloud overlay supplies proxy CA by secret/read-only mount without baking session configuration; see the runbook before running Docker here.
 
-**Actual hosted run:** [Engineering39051249057](https://github.com/AliSherLeghari/new-project-reactjs-nodejs/actions/runs/39051249057) passed quality and Docker jobs on implementation `5ebaca4e448c72c93056973c0279ad9cc58d4ebb`. Public standard Ubuntu runners, SHA-pinned first-party actions, contents:read, concurrency cancellation; no paid runners, image push, artifact upload or deployment. Raw hosted log download was policy-blocked; job/step conclusions were read from GitHub API, while detailed test/coverage numbers come from cloud execution. Check the final branch's latest CI separately after handoff commits.
+**Actual hosted run:** [Engineering39051249057](https://github.com/AliSherLeghari/opensource-explorer/actions/runs/39051249057) passed quality and Docker jobs on implementation `5ebaca4e448c72c93056973c0279ad9cc58d4ebb`. Public standard Ubuntu runners, SHA-pinned first-party actions, contents:read, concurrency cancellation; no paid runners, image push, artifact upload or deployment by that workflow. Raw hosted log download was policy-blocked; job/step conclusions were read from GitHub API, while detailed test/coverage numbers come from cloud execution. Check the final branch's latest CI separately after handoff commits.
 
 Measured cloud coverage: frontend97.33% lines/94.25% branches; backend97.93% lines/95.97% branches. npm audit reported0 findings in cloud. These are scoped observations, not security/performance certification. No OS-image CVE scan, native screen-reader or host/load/TLS test is claimed. The readiness checklist preserves those gaps and the owner review/hosting-cost/Phase6 gates.
 
@@ -98,4 +108,4 @@ Measured cloud coverage: frontend97.33% lines/94.25% branches; backend97.93% lin
 
 Reviewed production fixture screenshots: [360px search](docs/screenshots/phase-5-production-search-360.png), [768px details](docs/screenshots/phase-5-production-details-768.png), [1280px details](docs/screenshots/phase-5-production-details-1280.png). These show deterministic test data, not a live fixture repository. Actual-data live checks in earlier phases are recorded separately with proxy-auth caveats.
 
-Every future implementation task must update the central progress file and its own verification report in the same commit(s). Keep claims truthful about AI assistance, independently authored work, test provenance, exact refs and deployment status. Phase5 is stacked on `feat/phase-4-repository-details`; no dependency PR is merged automatically.
+Every future implementation task must update the central progress file and its own verification report in the same commit(s). Keep claims truthful about AI assistance, independently authored work, test provenance, exact refs, current branch state, and deployment status. The historical Phase 1–5 stacked PR workflow is complete; new changes should use their own reviewable PRs.
