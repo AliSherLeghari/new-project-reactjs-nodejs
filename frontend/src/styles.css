@@ -284,3 +284,149 @@ footer {
     padding: 10px 0;
   }
 }
+
+.search-button,
+.pagination button:not(:disabled) {
+  background: #184f42;
+  color: #fff;
+  cursor: pointer;
+}
+.search-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+.help-text,
+.submitted-search,
+.result-count {
+  color: #50645d;
+  font-size: 0.85rem;
+}
+.form-error {
+  color: #9b2919;
+  font-weight: 600;
+}
+.search-results {
+  margin-top: 36px;
+}
+.search-message {
+  padding: 18px 20px;
+  background: #eaf1e6;
+  border: 1px solid #d0dfc9;
+  border-radius: 10px;
+}
+.error-message {
+  background: #fff1e9;
+  border-color: #e7c6b5;
+  color: #7f301c;
+}
+.notice {
+  padding: 12px 16px;
+  background: #fff8e7;
+  border-left: 3px solid #98671c;
+  color: #5e481f;
+  font-size: 0.9rem;
+}
+.repository-grid {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+.repository-card {
+  background: #fff;
+  border: 1px solid #d8e1d9;
+  border-radius: 12px;
+  padding: 24px;
+  min-width: 0;
+}
+.repository-card article {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.repository-owner {
+  color: #50645d;
+  font-size: 0.8rem;
+  margin: 0 0 4px;
+}
+.repository-card h3 {
+  font-size: 1.25rem;
+  line-height: 1.4;
+  margin: 0 0 12px;
+}
+.repository-card h3 a {
+  color: #1d604b;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+}
+.repository-description {
+  margin: 0 0 18px;
+}
+.repository-language {
+  font-size: 0.8rem;
+  color: #426157;
+  margin-top: auto;
+}
+.repository-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 24px;
+  margin: 8px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid #e5ebe3;
+}
+.repository-stats dt {
+  font-size: 0.72rem;
+  color: #50645d;
+}
+.repository-stats dd {
+  margin: 0;
+  font-weight: 700;
+}
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
+.pagination span {
+  font-size: 0.8rem;
+  color: #50645d;
+}
+.repository-card,
+.submitted-search,
+.search-message,
+.notice,
+.result-count {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 760px) {
+  .search-options {
+    grid-template-columns: 1fr;
+  }
+  .repository-grid {
+    grid-template-columns: 1fr;
+  }
+  .pagination {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .pagination span {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    text-align: center;
+  }
+  .pagination button {
+    padding: 12px 8px;
+  }
+}
+
+#results-title:focus-visible {
+  outline: 3px solid #a24b16;
+  outline-offset: 4px;
+}

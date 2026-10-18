@@ -1,10 +1,11 @@
 # OpenSource Explorer
 
-A student full-stack learning project built with AI assistance and code review. The planned product helps people discover public GitHub repositories. **Phase 2 adds backend GitHub repository search and details. The Phase 1 homepage remains a preview; it is not wired to search yet.**
+A student full-stack learning project built with AI assistance and code review. The planned product helps people discover public GitHub repositories. **Phase 3 adds working React repository search, filters, cards, pagination, and error/cooldown handling through our own Express API. Repository details inside the app remain future work.**
 
 ## What works
 
-- Responsive React homepage with navigation, labeled search/language preview controls, and explicit coming-soon messaging.
+- Responsive React homepage with controlled search/language/sort/order/page-size inputs, repository cards, and bounded pagination.
+- Loading, empty, validation, safe error/retry, and rate-limit cooldown states; superseded searches are cancelled and ignored.
 - Real backend connection check, response validation, five-second timeout, and retry.
 - Express `GET /api/health`, structured 404/500 responses, and validated `PORT` configuration.
 - Validated backend search/details, normalized public repository data, safe upstream errors, request timeout, and bounded TTL cache.
@@ -28,17 +29,17 @@ The writable cache path avoids the restricted home directory in this environment
 
 ## Commands
 
-| Command                                            | Purpose                                                      |
-| -------------------------------------------------- | ------------------------------------------------------------ |
-| `npm run dev`                                      | Start frontend and backend watchers                          |
-| `npm run check`                                    | Formatting, lint, type checks, 109 tests, and builds         |
-| `npm run format`                                   | Format source and documentation                              |
-| `npm run test:e2e`                                 | Run three full-stack browser tests; starts/stops dev servers |
-| `CHROMIUM_PATH=/usr/bin/chromium npm run test:e2e` | Use this cloud environment's installed Chromium              |
-| `npm run build`                                    | Emit frontend assets and backend JavaScript                  |
-| `npm run start -w backend`                         | Run compiled backend after building                          |
+| Command                                            | Purpose                                              |
+| -------------------------------------------------- | ---------------------------------------------------- |
+| `npm run dev`                                      | Start frontend and backend watchers                  |
+| `npm run check`                                    | Formatting, lint, type checks, 150 tests, and builds |
+| `npm run format`                                   | Format source and documentation                      |
+| `npm run test:e2e`                                 | Run eight browser tests; starts/stops dev servers    |
+| `CHROMIUM_PATH=/usr/bin/chromium npm run test:e2e` | Use this cloud environment's installed Chromium      |
+| `npm run build`                                    | Emit frontend assets and backend JavaScript          |
+| `npm run start -w backend`                         | Run compiled backend after building                  |
 
-Browser tests use Playwright. Without a system Chromium, its matching browser must be installed in the cloud environment before running tests. Tests cover 390px and 1280px widths, real health connectivity, failure/retry, keyboard focus, overflow, and axe accessibility checks. Automated checks do not replace manual assistive-technology testing or physical Android testing.
+Browser tests use Playwright. Without a system Chromium, its matching browser must be installed in the cloud environment before running tests. Tests cover 390px and 1280px widths, real health and backend validation responses, deterministic search fixtures, filters/pagination, cooldowns, failure/retry, keyboard focus, overflow, and axe accessibility checks. Routine checks do not call GitHub search. Automated checks do not replace manual assistive-technology testing or physical Android testing.
 
 ## Health contract
 
@@ -60,6 +61,7 @@ Health indicates this Express process responds. It does not check GitHub availab
 ```text
 frontend/
   src/                 React UI, health client, styles, component tests
+    search/            Typed API client, search hook/form, cards, fixtures, tests
   index.html           Accessible document entry
   vite.config.ts       React plugin, API proxy, test setup
   tsconfig.json
@@ -79,11 +81,15 @@ backend/
 docs/
   learning/LESSON_01_FOUNDATION.md
   learning/LESSON_02_GITHUB_API.md
+  learning/LESSON_03_REACT_SEARCH.md
   PHASE_1_VERIFICATION.md
   PHASE_2_VERIFICATION.md
+  PHASE_3_VERIFICATION.md
+  screenshots/         Mobile/desktop screenshots using deterministic test data
   PROJECT_STATUS.md
 scripts/smoke-github.mjs
 tests/foundation.spec.ts
+tests/search.spec.ts
 AGENTS.md
 README.md
 package.json
@@ -100,9 +106,11 @@ Learning materials live in `docs/learning/` rather than a duplicate root `learni
 
 ```mermaid
 flowchart LR
-  Browser[React in browser] -->|GET /api/health| Vite[Vite development proxy]
+  Browser[React in browser] -->|GET /api/health or /api/repositories| Vite[Vite development proxy]
   Vite --> Express[Express on port 3001]
-  Express -->|JSON| Vite
+  Express -->|Cache miss for search| GitHub[Official GitHub REST API]
+  GitHub -->|Public repository data| Express
+  Express -->|Validated JSON| Vite
   Vite -->|JSON| Browser
 ```
 
@@ -110,7 +118,7 @@ Production builds are verified, but production routing and hosting are deferred.
 
 ## Quality, cost, and learning
 
-See [project status](docs/PROJECT_STATUS.md), [Phase 2 verification](docs/PHASE_2_VERIFICATION.md), and [Lesson 2](docs/learning/LESSON_02_GITHUB_API.md). [Phase 1 verification](docs/PHASE_1_VERIFICATION.md) and [Lesson 1](docs/learning/LESSON_01_FOUNDATION.md) remain historical foundation references. All selected libraries are free and open source. No external billable services were activated. Hosting terms and Actions eligibility must be verified before those later phases. The application sends no Authorization header. Live cloud responses may reflect platform proxy credentials; observed quotas must not be presented as the public unauthenticated allowance.
+See [project status](docs/PROJECT_STATUS.md), [Phase 3 verification](docs/PHASE_3_VERIFICATION.md), and [Lesson 3](docs/learning/LESSON_03_REACT_SEARCH.md). [Phase 2 verification](docs/PHASE_2_VERIFICATION.md) and [Lesson 2](docs/learning/LESSON_02_GITHUB_API.md) describe the unchanged backend. [Phase 1 verification](docs/PHASE_1_VERIFICATION.md) and [Lesson 1](docs/learning/LESSON_01_FOUNDATION.md) remain historical foundation references. All selected libraries are free and open source. No external billable services were activated. Hosting terms and Actions eligibility must be verified before those later phases. The application sends no Authorization header. Live cloud responses may reflect platform proxy credentials; observed quotas must not be presented as the public unauthenticated allowance.
 
 Review each phase in a feature branch/PR. Merging requires the student's approval. Contributions and learning claims should accurately acknowledge AI-assisted implementation and distinguish reading, modifying, and independently writing code.
 
@@ -161,6 +169,24 @@ For an optional **manual** cloud smoke test after building:
 NODE_USE_ENV_PROXY=1 node scripts/smoke-github.mjs
 ```
 
-This makes at most two GitHub requests, checks live search/details, and verifies a cached repeat. It is not part of ordinary automated tests. Tests remain fully mocked when GitHub is unreachable. A proxy 403 before HTTP reaches GitHub is an environment-access problem: from Android Chrome, review environment network settings for `api.github.com` and save/publish changes as required. Do not paste credentials into chat or disable TLS. In the current task GitHub API calls succeeded, although the environment policy metadata still reported unknown enforcement.
+This makes at most two GitHub requests, checks live search/details, and verifies a cached repeat. It is not part of ordinary automated tests. Tests remain fully mocked when GitHub is unreachable. A proxy 403 before HTTP reaches GitHub is an environment-access problem: from Android Chrome, review environment network settings for `api.github.com` and save/publish changes as required. Do not paste credentials into chat or disable TLS. During Phase 2, GitHub API calls succeeded although environment metadata reported unknown enforcement; Phase 3 did not repeat live search calls.
 
 Phase 2 is stacked on the unmerged `feat/phase-1-foundation` branch (PR #1). Review its PR against that branch to see only Phase 2 changes. After Phase 1 is approved/merged, retarget Phase 2 to `main` and verify the resulting diff before any separate merge approval.
+
+## Phase 3: using repository search
+
+Enter a name or topic and optionally choose a language, sort, order, and 10/20/50 results per page. Press Enter in the search field or press Search. Editing controls alone makes no search requests. Best match uses GitHub's relevance ordering; other sorts honor the selected order.
+
+The page clearly identifies the last submitted query/filters/page. Changing a filter disables old pagination/retry until you submit the new search, which starts at page 1. During loading, duplicate submissions are blocked; changing the draft allows a replacement search. Old requests are aborted and their late results ignored. Pagination places keyboard focus on the results heading.
+
+Cards show owner/name, description, language, stars, forks, and GitHub's combined open issue/PR count. Missing descriptions/languages are explicit. Repository links open GitHub in a new tab with safe `rel` attributes. No in-app detail screen exists yet.
+
+The browser calls only the relative `/api/repositories` endpoint using URLSearchParams, never `api.github.com`. The API client checks JSON object/array shapes, nullable strings, nonnegative counts, boolean pagination flags, matching page/page-size, the 1000-result window, and safe HTTPS GitHub repository URLs. TypeScript types alone are not treated as runtime validation. Extra fields are discarded; this is a deliberately small parser, not a general schema framework.
+
+The client has a 10-second deadline covering response/body parsing, separate from the backend's configurable timeout. It shows safe local messages for HTTP errors, malformed responses, network failure, and timeout. It never renders upstream HTML or arbitrary error messages. HTTP 429 pauses all search/retry requests until the latest valid Retry-After/body retry/reset hint (60 seconds if missing); HTTP 503 honors provided hints too. A local timer reenables controls but does not send requests. Cooldown is per mounted page, not persistent or a server-wide quota mechanism.
+
+Search totals may change. Truncation and incomplete-result warnings remain visible. Previous/Next obey both backend `has_next_page` and the accessible-page boundary; the UI does not claim that all reported matches can be fetched.
+
+[Mobile screenshot](docs/screenshots/phase-3-mobile.png) · [Desktop screenshot](docs/screenshots/phase-3-desktop.png). These show **deterministic test data**, not a live GitHub search, and the visible keyboard focus outline after pagination.
+
+Phase 3 branch `feat/phase-3-search-ui` starts from `feat/phase-2-github-api`. ChatGPT will create the stacked PR onto that Phase 2 branch after push. Existing PRs remain unmerged; no Phase 4, paid service, deployment, or Actions work is included.
