@@ -2,6 +2,12 @@
 
 Updated 2026-10-17. Development status and merge/deployment status are separate. No phase is complete without this journal and its verification report updated in the same implementation/evidence commit(s), as required by [Issue #7's reporting comment](https://github.com/AliSherLeghari/opensource-explorer/issues/7#issuecomment-6236802164) and AGENTS.md.
 
+## Withdrawal of the public demo (2026-10-19)
+
+- **Owner decision:** The owner decided to reverse/withdraw the Render deployment and stop promoting the public demo for internship and LinkedIn portfolio use. A GitHub documentation change does not stop hosting; the Render service status has not been independently checked.
+- **Documentation:** Removed the live-demo URL and free-tier wake-up notice from the README, and updated the current project status to favor code review and local run instructions. Do not present the project as actively publicly hosted unless the owner redeploys and verifies it.
+- **Evidence:** Earlier integration, deployment reports and Phase 5 checks below remain historical records. No application code, dependencies, Render account settings, or previously recorded testing evidence were changed by this documentation-only work.
+
 ## Post-Phase 5 integration and owner-reported deployment (2026-10-19)
 
 - **Integration:** The owner merged the completed app into `main` through [PR #10](https://github.com/AliSherLeghari/opensource-explorer/pull/10); GitHub comparison confirms no remaining file changes from the Phase 5 feature branch. The historical Phase 1–5 OPEN/NOT MERGED records below are snapshots taken at the time, not current states.
