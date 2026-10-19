@@ -2,17 +2,13 @@
 
 Search public GitHub repositories, inspect a project, and discover a bounded sample of open contribution issues. Built as an AI-assisted software-engineering learning/portfolio project with React, TypeScript, Express and the official GitHub REST API.
 
-**Current status (2026-10-19):** The five development phases are integrated into `main`, and the project owner reports a public Render deployment. The recorded Phase 5 tests and CI checks were performed before deployment; the live site's availability and performance have not been independently audited.
+**Current status (2026-10-19):** The five development phases are integrated into `main`. The owner has decided to withdraw the previously hosted Render demo, so this README no longer advertises a live website. The source, local run instructions, and historical Phase 5 test evidence remain available; the service's actual shutdown has not been independently confirmed.
 
 [Permanent phase progress](docs/PHASE_PROGRESS.md) · [Current status](docs/PROJECT_STATUS.md) · [Phase5 evidence](docs/PHASE_5_VERIFICATION.md) · [Deployment readiness](docs/DEPLOYMENT_READINESS.md)
 
-## Live demo
+## Source code and local demo
 
-**Website:** [https://opensource-explorer.onrender.com/](https://opensource-explorer.onrender.com/)
-
-The application is hosted on a Render free web service. Following inactivity, the server may sleep and the first visit may take around a minute to wake up. The live URL and hosting status are owner-reported; automated public-host verification is not claimed here. If the service is temporarily unavailable, the project can be run locally using the instructions below.
-
-**Source:** [GitHub repository](https://github.com/AliSherLeghari/opensource-explorer) · **Public API health:** [Health endpoint](https://opensource-explorer.onrender.com/api/health)
+The public hosted demo is no longer being promoted. To try the application, clone the [GitHub repository](https://github.com/AliSherLeghari/opensource-explorer) and follow the [Run and verify](#run-and-verify) instructions below. No deployed website is required.
 
 ## Application
 
@@ -22,7 +18,7 @@ The application is hosted on a Render free web service. Following inactivity, th
 - Loading/empty/errors, cancellation/stale-result guards, manual retry and rate-limit cooldown; no automatic GitHub polling.
 - Compact accessible layout, keyboard focus/status, reduced motion and automated checks at360/390/768/1280.
 
-The application itself needs no GitHub API token, app login, database, or paid API. A hosted service is optional for local operation; the public demo is deployed separately on Render's free offering. Public GitHub quotas still apply; cloud proxy authentication can inflate observed quotas independently of our token-free request code.
+The application itself needs no GitHub API token, app login, database, or paid API, and it can run locally without a hosted service. A Render demo was previously deployed but is being withdrawn from public promotion. Public GitHub quotas still apply; cloud proxy authentication can inflate observed quotas independently of our token-free request code.
 
 ## Architecture
 

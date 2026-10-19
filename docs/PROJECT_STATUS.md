@@ -1,30 +1,26 @@
 # Current project status
 
-Updated 2026-10-19. This page records the current integration and owner-reported deployment status. Historical Phase 1–5 testing and readiness claims remain scoped to their original dates and environments.
+Updated 2026-10-19. The complete five-phase application is integrated into `main`. The owner has chosen to withdraw the previously hosted Render demo. No active public demo is advertised, and the actual Render service shutdown/rollback has not been independently verified.
 
-## Integrated project and public launch
+## Source-code portfolio status
 
-- **Repository:** [OpenSource Explorer](https://github.com/AliSherLeghari/opensource-explorer), with the completed five-phase application integrated into `main`. GitHub comparison on 2026-10-19 found zero file changes between `main` and the Phase 5 source branch.
-- **Deployment:** The owner reports that the Node/Express + React application has been deployed on Render at [https://opensource-explorer.onrender.com/](https://opensource-explorer.onrender.com/). Hosted operation and end-to-end functionality have **not been independently verified** in this documentation update.
-- **Hosting behavior:** Render's free service may sleep when idle, leading to a roughly minute-long cold start. Exact wake-up performance and rate limits have not been measured here.
-- **Local validation:** The owner reported successful installation, production build/start, and website operation on their Windows laptop. This report is not a separately executed CI or container test.
-- **AI-assisted development:** Implementation was AI-assisted; test evidence, author involvement, and any unverified checks should remain described accurately.
+- **Source:** [OpenSource Explorer](https://github.com/AliSherLeghari/opensource-explorer), with full-stack React/TypeScript and Express/Node source in `main`.
+- **Deployment:** A Render free-tier demo was previously reported as deployed, but the owner is reversing that deployment. Do not rely on or promote the former live URL; confirm the Render dashboard state separately.
+- **Try locally:** Follow the root [README](../README.md) for installation, production build/start, and tests. This project does not require a public deployment for review.
+- **Evidence:** Recorded Phase 5 tests and CI apply to their documented commit refs and environments. The current live-host status and performance were not independently assessed.
+- **Development approach:** AI-assisted implementation accompanied by test review, code exploration, and learning documentation.
 
-## Phase 5 implementation and historical verification
+## Technical capabilities and recorded verification
 
-The application includes same-origin Express API and React SPA, GitHub public repository search/details/issues, validation and safe URL handling, short-lived cache, security boundaries, graceful shutdown, Docker/Compose, and GitHub Actions quality and container checks.
+The source includes GitHub public repository search, filtering and pagination; repository detail and bounded contribution-issue views; runtime input/output checks, caching, safe errors, cooldowns, and production build, Docker and CI configuration.
 
-Previously recorded Phase 5 checks include 81 frontend and 154 backend tests, development and production browser tests, coverage and npm audit measurements, Docker/Compose smoke tests, and successful hosted CI jobs at the specific recorded refs. These observations **do not certify the current public Render deployment**, its TLS/proxy behavior, or its response time.
+Historical Phase 5 reports record 81 frontend and 154 backend tests, browser checks, coverage and audit results, Docker/Compose checks, and CI conclusions. These are scoped records, not fresh test executions during the hosting change. See [PHASE_PROGRESS](PHASE_PROGRESS.md), [PHASE_5_VERIFICATION](PHASE_5_VERIFICATION.md), and [OPERATIONS](OPERATIONS.md).
 
-See [PHASE_PROGRESS](PHASE_PROGRESS.md), [PHASE_5_VERIFICATION](PHASE_5_VERIFICATION.md), [DEPLOYMENT_READINESS](DEPLOYMENT_READINESS.md), [OPERATIONS](OPERATIONS.md), and the five [learning lessons](learning/LESSON_05_PRODUCTION_ENGINEERING.md) for details and historical evidence.
+## Next steps
 
-## Outstanding checks and next work
-
-- Verify the Render URL from a separate device, including search, detail deep-link refresh, issues, API health/readiness, and idle cold start.
-- Check the Render production branch is `main` and that the build installs dev dependencies (e.g. `npm ci --include=dev && npm run build`) before `npm start`.
-- Monitor host limits and GitHub API rate limiting; keep billing and account configuration under the owner's control.
-- Consider OS-container CVE scanning, native-device screen-reader checks, load testing, and specific TLS/proxy review if the audience and traffic justify them.
-- For any future code change, follow `AGENTS.md`: use a reviewable PR and update the permanent progress journal and verification report with actual evidence.
+- Confirm or complete the intended Render service shutdown/rollback in the Render dashboard; GitHub documentation edits do not change hosting.
+- Keep the README and any LinkedIn/resume material free of live-demo claims unless a public deployment is restored and verified.
+- For new features or fixes, use a reviewable PR and record executed checks in the permanent progress journal; do not rewrite the original phase verification history.
 
 ## Previous Phase 5 snapshot (archived context)
 
